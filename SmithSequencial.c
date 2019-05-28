@@ -18,91 +18,99 @@
 
 char *sequenciaA, *sequenciaB, *alinhamentoOtimoA, *alinhamentoOtimoB;
 int *matrizValores, *matrizPosicao;
-int tamSequenciaA, tamSequenciaB, posMaiorElem;
+long tamSequenciaA, tamSequenciaB, posMaiorElem;
 
 void alocarMatriz(){
+	// matrizPosicao = malloc((tamSequenciaA*tamSequenciaB) * sizeof(int));           //aloca um vetor de ponteiros
+	matrizValores = malloc((tamSequenciaA*tamSequenciaB) * sizeof(int));           //aloca um vetor de ponteiros
 
- matrizPosicao = calloc(tamSequenciaA*tamSequenciaB, sizeof(int));           //aloca um vetor de ponteiros
- matrizValores = calloc(tamSequenciaA*tamSequenciaB, sizeof(int));           //aloca um vetor de ponteiros
+
+	for (int i = 0; i < tamSequenciaA; ++i){
+		for (int j = 0; j < tamSequenciaB; ++j) {
+			matrizValores[i * tamSequenciaA + j] = 0;
+		
+		}
+	}
 }
 
 void lerSequencias(char *nomeArq){
-  FILE *arq;
-  char seqArquivo[500000], buffer[500000];
+	FILE *arq;
+	char *seqArquivo, *buffer;
+	long tamSeqA, tamSeqB;
 
-  arq = fopen(nomeArq, "r");    
+	arq = fopen(nomeArq, "r");    
 
-  if ( !arq ){
-    perror("Erro ao abrir arquivo") ;
-    exit(1);
-  }
+	if ( !arq ){
+	  perror("Erro ao abrir arquivo") ;
+	  exit(1);
+	}
 
-  strcpy(buffer, "x");
+	fscanf(arq, "%ld %ld", &tamSequenciaA, &tamSequenciaB);
 
-  fscanf(arq, "%s", seqArquivo);
-  strcat(buffer, seqArquivo);
-  sequenciaA = malloc(strlen(buffer) * sizeof(char));
-  strcpy(sequenciaA, buffer);
-  tamSequenciaA = strlen(sequenciaA);
+	tamSequenciaA++;
+	tamSequenciaB++;
 
-  strcpy(buffer, "x");
+  	sequenciaA = malloc(tamSequenciaA * sizeof(char));
+  	sequenciaB = malloc(tamSequenciaB * sizeof(char));
+  	buffer = malloc(tamSequenciaA * sizeof(char));
 
-  fscanf(arq, "%s", seqArquivo);
-  strcat(buffer, seqArquivo);
-  sequenciaB = malloc(strlen(buffer) * sizeof(char));
-  strcpy(sequenciaB, buffer);
-  tamSequenciaB = strlen(sequenciaB);
+  	strcpy(buffer, "x");
 
-  fclose(arq);
+	fscanf(arq, "%s", sequenciaA);
+	strcat(buffer, sequenciaA);
+	strcpy(sequenciaA, buffer);
+
+	strcpy(buffer, "x");
+  	
+  	fscanf(arq, "%s", sequenciaB);
+	strcat(buffer, sequenciaB);
+	strcpy(sequenciaB, buffer);  	 
+  	
+  	fclose(arq);
 }
 
 int maxDirecao(int diag, int topo, int esq, int posVetor){
-  int max = diag;
+  int max = 0;
 
-  matrizPosicao[posVetor] = DIAGONAL;
+  // matrizPosicao[posVetor] = DIAGONAL;
 
   if(topo > max){
     max = topo;
-    matrizPosicao[posVetor] = TOPO;   
+    // matrizPosicao[posVetor] = TOPO;   
   }
 
   if(esq > max){
     max = esq;
-    matrizPosicao[posVetor] = ESQUERDA;
+    // matrizPosicao[posVetor] = ESQUERDA;
   }
 
   return max;
 }
 
+int maxValor(int a, int b, int c){
+	int max = 0;
+
+	max = max > a ? max : a;
+	max = max > b ? max : b;
+	max = max > c ? max : c;
+
+	return max; 
+}
+
 void calcSmithWaterman(){
 
- int i, j, diag, topo, esq;
- int score;
- int max = 0;
+	int i, j, diag, topo, esq;
+	int score;
 
-  for(j = 1; j < tamSequenciaA; j++){
-    score = sequenciaB[1] == sequenciaA[j] ? MATCH : MISMATCH;
-    diag = matrizValores[j - 1] + score;
-    topo = matrizValores[j] + GAP;
-    esq = matrizValores[tamSequenciaA + (j - 1)] + GAP;
-    matrizValores[tamSequenciaA + j] = maxDirecao(diag, topo, esq, tamSequenciaA + j);
-    
-    if(matrizValores[tamSequenciaA + j] > matrizValores[posMaiorElem])
-      posMaiorElem = tamSequenciaA + j;
-  }
-
-  for(i = 2; i < tamSequenciaB; i++){
-    for(j = 1; j < tamSequenciaB; j++){
-      score = sequenciaB[i] == sequenciaA[j] ? MATCH : MISMATCH;
-      diag = matrizValores[(tamSequenciaA * (i - 1)) + (j - 1)] + score;
-      topo = matrizValores[(tamSequenciaA * (i - 1)) + j] + GAP;
-      esq = matrizValores[(tamSequenciaA * i) + (j - 1)] + GAP;
-      matrizValores[(tamSequenciaA * i) + j] = maxDirecao(diag, topo, esq, (tamSequenciaA * i) + j);
-      
-      if(matrizValores[(tamSequenciaA * i) + j] > matrizValores[posMaiorElem])
-        posMaiorElem = (tamSequenciaA * i) + j;
-    }
-  }
+	for(i = 1; i < tamSequenciaA; ++i){
+		for(j = 1; j < tamSequenciaB; ++j){
+			score = sequenciaB[i] == sequenciaA[j] ? MATCH : MISMATCH;
+			diag = matrizValores[(i - 1) * tamSequenciaA + (j - 1)] + score;
+			topo = matrizValores[(i - 1) * tamSequenciaA + j] + GAP;
+			esq = matrizValores[i * tamSequenciaA + (j - 1)] + GAP;
+			matrizValores[i * tamSequenciaA + j] = maxValor(diag, topo, esq);
+		}
+	}
 }
 
  void backtrace(){
@@ -172,31 +180,45 @@ void calcSmithWaterman(){
     printf("\n");
   }
 
+
+
+  void imprimeMat(int *mat){
+
+  	for (int i = 0; i < tamSequenciaA; ++i){
+  		for (int j = 0; j < tamSequenciaB; ++j){
+  			printf("%d ", mat[i * tamSequenciaA + j]);
+  		}
+  		printf("\n");
+  	}
+
+  }
+
 int main(int argc, char **argv){
- 
- 
+  
 	char *nomeArq;
 	int nIteracao, i;
-  double start, end;
+    double start, end;
 
 	nomeArq = argv[1];
 	nIteracao = argv[2] == NULL ? 1 : atoi(argv[2]);
-
-  lerSequencias(nomeArq);
+	
+	lerSequencias(nomeArq);
 
 	alocarMatriz();
 
-  start = omp_get_wtime();
+
+
+  	start = omp_get_wtime();
 
 	for(i = 0; i < nIteracao; i++){	
 		calcSmithWaterman();	
 	}
 
-	backtrace();
+	// backtrace();
 
-  end = omp_get_wtime();
+  	end = omp_get_wtime();
 
-  printf("TEMPO: %lf\n", end - start);
+  	printf("TEMPO: %lf\n", end - start);
 
 	return(0); 
 }
