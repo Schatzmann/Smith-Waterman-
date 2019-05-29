@@ -53,7 +53,7 @@ void lerSequencias(char *nomeArq){
 	tamSequenciaB++;
 
  	sequenciaA = malloc((tamSequenciaA * 2) * sizeof(char));
- 	sequenciaB = malloc((tamSequenciaB * 2) sizeof(char));
+ 	sequenciaB = malloc((tamSequenciaB * 2) * sizeof(char));
 
 	fscanf(arq, "%s", sequenciaA);
   fscanf(arq, "%s", sequenciaB); 
@@ -102,27 +102,48 @@ void calcSmithWaterman(){
 	}
 }
 
+char *insertChar(char *string, char *ch, int pos){
+	char *buffer;
+    int tam;
+
+    buffer = malloc((strlen(string) * 2) * sizeof(char));
+
+	strncpy(buffer, string, pos);
+    tam = strlen(buffer);
+    strcpy(buffer + tam, ch);
+    tam++;
+    strcpy(buffer + tam, string + pos);
+
+    strcpy(string, buffer); 
+
+    free(buffer);
+
+    return string;
+}
+
 void backtrace(long maiorElemento){
   char *ch;
+
+  // ch = '-';
 
   while(matrizValores[maxI * tamSequenciaA + maxJ].valor > 0){
     
     if(matrizValores[maxI * tamSequenciaA + maxJ].origem == DIAGONAL){
 
-      maxI--;
-      maxJ--;
+      	maxI--;
+      	maxJ--;
     
     } else if(matrizValores[maxI * tamSequenciaA + maxJ].origem == TOPO){
    
-      sequenciaA[maxJ] = '-';
-      
-      maxI--;
+      	sequenciaA = insertChar(sequenciaA, "-", maxJ);
+
+      	maxI--;
 
    	} else if(matrizValores[maxI * tamSequenciaA + maxJ].origem == ESQUERDA){
        
-      sequenciaB[maxI - 1] = '-';
+   		sequenciaB = insertChar(sequenciaB, "-", maxI);
 
-      maxJ--;
+      	maxJ--;
     }
 
   }
@@ -175,11 +196,15 @@ int main(int argc, char **argv){
 		calcSmithWaterman();	
 	}
 
-	backtrace(maiorElemento);
+	// backtrace(maiorElemento);
 
  	end = omp_get_wtime();
 
  	printf("TEMPO: %lf\n", end - start);
+
+ 	free(sequenciaA);
+ 	free(sequenciaB);
+ 	free(matrizValores);
 
 	return(0); 
 }
