@@ -23,7 +23,7 @@ typedef struct smithWaterman {
 
 char *sequenciaA, *sequenciaB, *alinhamentoOtimoA, *alinhamentoOtimoB;
 smithWaterman *matrizValores;
-long tamSequenciaA, tamSequenciaB;
+long tamSequenciaA, tamSequenciaB, maxI, maxJ;
 
 void alocarMatriz(){
 
@@ -52,8 +52,8 @@ void lerSequencias(char *nomeArq){
 	tamSequenciaA++;
 	tamSequenciaB++;
 
- 	sequenciaA = malloc(tamSequenciaA * sizeof(char));
- 	sequenciaB = malloc(tamSequenciaB * sizeof(char));
+ 	sequenciaA = malloc((tamSequenciaA * 2) * sizeof(char));
+ 	sequenciaB = malloc((tamSequenciaB * 2) sizeof(char));
 
 	fscanf(arq, "%s", sequenciaA);
   fscanf(arq, "%s", sequenciaB); 
@@ -76,92 +76,60 @@ smithWaterman maxValor(smithWaterman a, smithWaterman b, smithWaterman c){
 
 void calcSmithWaterman(){
 
-	int i, j;
 	int score;
+  long maiorElemento;
 
   smithWaterman diagonal, topo, esquerda;
 
   diagonal.origem = DIAGONAL;
   topo.origem = TOPO;
   esquerda.origem = ESQUERDA;
+  maiorElemento = 0;
 
-	for(i = 1; i < tamSequenciaA; ++i){
-		for(j = 1; j < tamSequenciaB; ++j){
+	for(int i = 1; i < tamSequenciaA; ++i){
+		for(int j = 1; j < tamSequenciaB; ++j){
 			score = sequenciaB[i - 1] == sequenciaA[j - 1] ? MATCH : MISMATCH;
 			diagonal.valor = matrizValores[(i - 1) * tamSequenciaA + (j - 1)].valor + score;
 			topo.valor = matrizValores[(i - 1) * tamSequenciaA + j].valor + GAP;
 			esquerda.valor = matrizValores[i * tamSequenciaA + (j - 1)].valor + GAP;
 			matrizValores[i * tamSequenciaA + j] = maxValor(diagonal, topo, esquerda);
+
+      if(matrizValores[i * tamSequenciaA + j].valor >= matrizValores[maxI * tamSequenciaA + maxJ].valor){
+        maxI = i;
+        maxJ = j;
+      }
 		}
 	}
 }
 
- // void backtrace(){
- //   int posVetor, i;
- //   char ch, *alinhamentoOtimoB, *alinhamentoOtimoA, lacuna, vazio;
+void backtrace(long maiorElemento){
+  char *ch;
 
- //   lacuna = '-';
- //   ch = ' ';
+  while(matrizValores[maxI * tamSequenciaA + maxJ].valor > 0){
+    
+    if(matrizValores[maxI * tamSequenciaA + maxJ].origem == DIAGONAL){
 
- //    alinhamentoOtimoA = (char*) malloc(strlen(sequenciaA) * sizeof(char));
- //    alinhamentoOtimoB = (char*) malloc(strlen(sequenciaB) * sizeof(char));
- 	
- // 	strcpy(alinhamentoOtimoB, " ");
- // 	strcpy(alinhamentoOtimoA, " ");
+      maxI--;
+      maxJ--;
+    
+    } else if(matrizValores[maxI * tamSequenciaA + maxJ].origem == TOPO){
+   
+      sequenciaA[maxJ] = '-';
+      
+      maxI--;
 
- //   while(matrizPosicao[posMaiorElem] > 0){
- //      if(matrizPosicao[posMaiorElem] == DIAGONAL){
-
- //       posVetor = posMaiorElem / tamSequenciaB;
-
- //       ch = sequenciaB[posVetor];
+   	} else if(matrizValores[maxI * tamSequenciaA + maxJ].origem == ESQUERDA){
        
- //       strncat(alinhamentoOtimoA, &ch, 1);
- //       strncat(alinhamentoOtimoB, &ch, 1);
+      sequenciaB[maxI - 1] = '-';
 
- //       posMaiorElem = (posMaiorElem - tamSequenciaA) - 1;
+      maxJ--;
+    }
 
- //     } 
+  }
 
- //     	if(matrizPosicao[posMaiorElem] == TOPO){
-    
- //       //printf("ALINHAMENTO B: %s\n",alinhamentoOtimoB);
- //       posVetor = posMaiorElem / tamSequenciaB;
-      
- //       strcat(alinhamentoOtimoA, &lacuna);
-
- //       ch = sequenciaB[posVetor];
- //       //printf("%c\n",ch);
- //       strncat(alinhamentoOtimoB, &ch, 1);
-      
- //       posMaiorElem = posMaiorElem - tamSequenciaA;
- //    	}
-
- //     	if(matrizPosicao[posMaiorElem] == ESQUERDA){
-
- //       posVetor = posMaiorElem / tamSequenciaA;
-    
- //       strcat(alinhamentoOtimoB, &lacuna);
-
- //       ch = sequenciaA[posVetor];
- //       strncat(alinhamentoOtimoA, &ch, 1);
-
- //       posMaiorElem = posMaiorElem - 1;
- //      }
- //   }
-
- //    for(i = strlen(alinhamentoOtimoA); i > -1; i--){
- //   		printf("%c", alinhamentoOtimoA[i]);
- //   	}
-
- //   	printf("\n");
-
- //   	for(i = strlen(alinhamentoOtimoB); i > -1; i--){
- //   		printf("%c", alinhamentoOtimoB[i]);
- //    }
-
- //    printf("\n");
- //  }
+  printf("%s\n", sequenciaA);
+  printf("%s\n", sequenciaB);
+}
 
   void imprimeMat(smithWaterman *mat){
 
@@ -191,7 +159,8 @@ int main(int argc, char **argv){
   
 	char *nomeArq;
 	int nIteracao, i;
-    double start, end;
+  long maiorElemento;
+  double start, end;
 
 	nomeArq = argv[1];
 	nIteracao = argv[2] == NULL ? 1 : atoi(argv[2]);
@@ -206,9 +175,7 @@ int main(int argc, char **argv){
 		calcSmithWaterman();	
 	}
 
-  imprimeMat(matrizValores);
-
-	// backtrace();
+	backtrace(maiorElemento);
 
  	end = omp_get_wtime();
 
