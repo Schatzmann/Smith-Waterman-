@@ -87,63 +87,69 @@ smithWaterman maxValor(smithWaterman a, smithWaterman b, smithWaterman c){
 
 void calcSmithWaterman() {
 
-    int score, flagI, j;
-	
-	
+    int score, max_i;
  	smithWaterman diagonal, topo, esquerda;
 
  	diagonal.origem = DIAGONAL;
  	topo.origem = TOPO;
  	esquerda.origem = ESQUERDA;
+ 	score = 0;
 
+ 	max_i = tamSequenciaA - 1;
 	
-	for(int i = 0; i < tamSequenciaA; ++i){
-		flagI = i;
-		#pragma omp parallel for default(none) firstprivate(flagI) shared(maxI, maxJ, i)
-		for(j = 0; j <= i; ++j){
-			if(matrizValores[flagI * tamSequenciaA + j].valor == 1){
-                score = sequenciaB[flagI - 1] == sequenciaA[j - 1] ? MATCH : MISMATCH;
-				diagonal.valor = matrizValores[(flagI - 1) * tamSequenciaA + (j - 1)].valor + score;
-				topo.valor = matrizValores[(flagI - 1) * tamSequenciaA + j].valor + GAP;
-				esquerda.valor = matrizValores[flagI * tamSequenciaA + (j - 1)].valor + GAP;
-				matrizValores[flagI * tamSequenciaA + j] = maxValor(diagonal, topo, esquerda);
+	for(int i = 0; i < 2*tamSequenciaA - 1; i++){
+		printf("NOVA DIAGONAL:\n");
 
-				if(matrizValores[flagI * tamSequenciaA + j].valor >= matrizValores[maxI * tamSequenciaA + maxJ].valor){
-	        		#pragma omp critical
-	        		{
-	        			maxI = flagI;
-	       				maxJ = j;
-	       			}
-				} 
+		if((tamSequenciaA - 1 - i) >= 0)
+		{
+			#pragma omp parallel for firstprivate(score, diagonal, topo, esquerda)
+			for(int j = 0; j <= i; j++){
+				
+				int flagI = i - j;
+				if(matrizValores[flagI * tamSequenciaA + j].valor == 1){
+		               score = sequenciaB[flagI - 1] == sequenciaA[j - 1] ? MATCH : MISMATCH;
+					diagonal.valor = matrizValores[(flagI - 1) * tamSequenciaA + (j - 1)].valor + score;
+					topo.valor = matrizValores[(flagI - 1) * tamSequenciaA + j].valor + GAP;
+					esquerda.valor = matrizValores[flagI * tamSequenciaA + (j - 1)].valor + GAP;
+					matrizValores[flagI * tamSequenciaA + j] = maxValor(diagonal, topo, esquerda);
+				        	#pragma omp critical
+		        	{
+						if(matrizValores[flagI * tamSequenciaA + j].valor >= matrizValores[maxI * tamSequenciaA + maxJ].valor){
+		        				maxI = flagI;
+		       					maxJ = j;
+		       			}
+					} 
+				}
 			}
-			#pragma omp critical
-			flagI--;
+			printf("\n\n\n\n");
+		
+		} else {
+
+			int min_i = abs(2*tamSequenciaA - i - 1 - max_i);
+				
+			#pragma omp parallel for firstprivate(score, diagonal, topo, esquerda)
+			for (int j = max_i; j > min_i ; j--){
 			
-		}
-	}
-
-	for(int i = 1; i < tamSequenciaA; ++i){
-		flagI = tamSequenciaA - 1;
-		#pragma omp parallel for default(none) firstprivate(flagI) shared(maxI, maxJ, i)
-		for (j = i; j < tamSequenciaA; ++j){
-			if(matrizValores[flagI * tamSequenciaA + j].valor == 1){
-                score = sequenciaB[flagI - 1] == sequenciaA[j - 1] ? MATCH : MISMATCH;
-				diagonal.valor = matrizValores[(flagI - 1) * tamSequenciaA + (j - 1)].valor + score;
-				topo.valor = matrizValores[(flagI - 1) * tamSequenciaA + j].valor + GAP;
-				esquerda.valor = matrizValores[flagI * tamSequenciaA + (j - 1)].valor + GAP;
-				matrizValores[flagI * tamSequenciaA + j] = maxValor(diagonal, topo, esquerda);
-
-				if(matrizValores[flagI * tamSequenciaA + j].valor >= matrizValores[maxI * tamSequenciaA + maxJ].valor){
-	        		#pragma omp critical
-	        		{
-	        			maxI = flagI;
-	       				maxJ = j;
-	       			}
-				} 
+				int flagI = i - j;
+				if(matrizValores[flagI * tamSequenciaA + j].valor == 1){
+					printf("THREAD:%d  -  MATRIZ[%d][%d]\n", omp_get_thread_num(), flagI, j);
+	                score = sequenciaB[flagI - 1] == sequenciaA[j - 1] ? MATCH : MISMATCH;
+					diagonal.valor = matrizValores[(flagI - 1) * tamSequenciaA + (j - 1)].valor + score;
+					topo.valor = matrizValores[(flagI - 1) * tamSequenciaA + j].valor + GAP;
+					esquerda.valor = matrizValores[flagI * tamSequenciaA + (j - 1)].valor + GAP;
+					matrizValores[flagI * tamSequenciaA + j] = maxValor(diagonal, topo, esquerda);
+	
+		        	#pragma omp critical
+		        	{
+						if(matrizValores[flagI * tamSequenciaA + j].valor >= matrizValores[maxI * tamSequenciaA + maxJ].valor){
+		        				maxI = flagI;
+		       					maxJ = j;
+		       			}
+					} 
+				
+				}
 			}
-			#pragma omp critical
-			flagI--;
-			
+			printf("\n\n\n\n");
 		}
 	}
 }
@@ -253,7 +259,7 @@ int main(int argc, char **argv){
 	// printf("\n\n\n");
 
 
-	backtrace(maiorElemento);
+	// backtrace(maiorElemento);
 
  // 	end = omp_get_wtime();
 
