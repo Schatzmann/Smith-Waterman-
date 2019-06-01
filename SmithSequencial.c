@@ -32,7 +32,7 @@ void alocarMatriz(){
 	for (int i = 0; i < tamSequenciaA; ++i){
 		for (int j = 0; j < tamSequenciaB; ++j) {
 			matrizValores[i * tamSequenciaA + j].valor = 0;
-      matrizValores[i * tamSequenciaA + j].origem = 0;
+     	matrizValores[i * tamSequenciaA + j].origem = 0;
 		}
 	}
 }
@@ -77,14 +77,13 @@ smithWaterman maxValor(smithWaterman a, smithWaterman b, smithWaterman c){
 void calcSmithWaterman(){
 
 	int score;
-  long maiorElemento;
-
+	
   smithWaterman diagonal, topo, esquerda;
 
-  diagonal.origem = DIAGONAL;
-  topo.origem = TOPO;
-  esquerda.origem = ESQUERDA;
-  maiorElemento = 0;
+	diagonal.origem = DIAGONAL;
+	topo.origem = TOPO;
+	esquerda.origem = ESQUERDA;
+  
 
 	for(int i = 1; i < tamSequenciaA; ++i){
 		for(int j = 1; j < tamSequenciaB; ++j){
@@ -94,39 +93,39 @@ void calcSmithWaterman(){
 			esquerda.valor = matrizValores[i * tamSequenciaA + (j - 1)].valor + GAP;
 			matrizValores[i * tamSequenciaA + j] = maxValor(diagonal, topo, esquerda);
 
-      if(matrizValores[i * tamSequenciaA + j].valor >= matrizValores[maxI * tamSequenciaA + maxJ].valor){
-        maxI = i;
-        maxJ = j;
-      }
-		}
+			if(matrizValores[i * tamSequenciaA + j].valor >= matrizValores[maxI * tamSequenciaA + maxJ].valor){
+     		maxI = i;
+     		maxJ = j;
+			}
+    }    	
 	}
 }
 
 char *insertChar(char *string, char *ch, int pos){
 	char *buffer;
-    int tam;
+  int tam;
 
-    buffer = malloc((strlen(string) * 2) * sizeof(char));
+  buffer = malloc((strlen(string) * 2) * sizeof(char));
 
 	strncpy(buffer, string, pos);
-    tam = strlen(buffer);
-    strcpy(buffer + tam, ch);
-    tam++;
-    strcpy(buffer + tam, string + pos);
+  tam = strlen(buffer);
+  strcpy(buffer + tam, ch);
+  tam++;
+  strcpy(buffer + tam, string + pos);
 
-    strcpy(string, buffer); 
+  strcpy(string, buffer); 
 
-    free(buffer);
+  free(buffer);
 
-    return string;
+  return string;
 }
 
-void backtrace(long maiorElemento){
+void backtrace(){
   char *ch;
 
   // ch = '-';
 
-  while(matrizValores[maxI * tamSequenciaA + maxJ].valor > 0){
+  while(matrizValores[maxI * tamSequenciaA + maxJ].valor != 0){
     
     if(matrizValores[maxI * tamSequenciaA + maxJ].origem == DIAGONAL){
 
@@ -196,7 +195,9 @@ int main(int argc, char **argv){
 		calcSmithWaterman();	
 	}
 
-	// backtrace(maiorElemento);
+  imprimeMat(matrizValores);
+
+	backtrace(maiorElemento);
 
  	end = omp_get_wtime();
 
