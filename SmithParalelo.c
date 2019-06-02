@@ -1,8 +1,8 @@
 /*-------------------------------------------------------------------------------------------------------
   Annelyse Schatzmann - GRR20151731
   Eduardo Zimermam Pereira - GRR20152952  
-
 -------------------------------------------------------------------------------------------------------*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,27 +21,27 @@ typedef struct smithWaterman {
   long origem;
 } smithWaterman;
 
-char *sequenciaA, *sequenciaB, *alinhamentoOtimoA, *alinhamentoOtimoB;
+char *sequenciaA, *sequenciaB, *alinhamentoA, *alinhamentoB;
 smithWaterman *matrizValores;
-long tamSequenciaA, tamSequenciaB, maxI, maxJ;
+long tamSequencia, maxI, maxJ;
 
 void alocarMatriz(){
 
-	matrizValores = malloc((tamSequenciaA*tamSequenciaB) * sizeof(smithWaterman));           //aloca um vetor de ponteiros
+	matrizValores = malloc((tamSequencia*tamSequencia) * sizeof(smithWaterman));           //aloca um vetor de ponteiros
 
-	for (int i = 0; i < tamSequenciaA; ++i){
-		for (int j = 0; j < tamSequenciaB; ++j) {
-			matrizValores[i * tamSequenciaA + j].valor = 1;
-      		matrizValores[i * tamSequenciaA + j].origem = 1;
+	for (int i = 0; i < tamSequencia; ++i){
+		for (int j = 0; j < tamSequencia; ++j) {
+			matrizValores[i * tamSequencia + j].valor = 1;
+      		matrizValores[i * tamSequencia + j].origem = 1;
 		}
 	}
 
-	for (int i = 0; i < tamSequenciaA; ++i){
-		matrizValores[i * tamSequenciaA].valor = 0;
-		matrizValores[i * tamSequenciaA].origem = 0;
+	for (int i = 0; i < tamSequencia; ++i){
+		matrizValores[i * tamSequencia].valor = 0;
+		matrizValores[i * tamSequencia].origem = 0;
 	}
 
-	for (int i = 0; i < tamSequenciaA; ++i){
+	for (int i = 0; i < tamSequencia; ++i){
 		matrizValores[i].valor = 0;
 		matrizValores[i].origem = 0;
 	}
@@ -57,13 +57,12 @@ void lerSequencias(char *nomeArq){
 	  exit(1);
 	}
 
-	fscanf(arq, "%ld %ld", &tamSequenciaA, &tamSequenciaB);
+	fscanf(arq, "%ld", &tamSequencia);
 
-	tamSequenciaA++;
-	tamSequenciaB++;
-
- 	sequenciaA = malloc((tamSequenciaA * 2) * sizeof(char));
- 	sequenciaB = malloc((tamSequenciaB * 2) * sizeof(char));
+	tamSequencia++;
+	
+ 	sequenciaA = malloc((tamSequencia * 2) * sizeof(char));
+ 	sequenciaB = malloc((tamSequencia * 2) * sizeof(char));
 
 	fscanf(arq, "%s", sequenciaA);
   	fscanf(arq, "%s", sequenciaB); 
@@ -95,123 +94,111 @@ void calcSmithWaterman() {
  	esquerda.origem = ESQUERDA;
  	score = 0;
 
- 	max_i = tamSequenciaA - 1;
+ 	max_i = tamSequencia - 1;
 	
-	for(int i = 0; i < 2*tamSequenciaA - 1; i++){
-		printf("NOVA DIAGONAL:\n");
-
-		if((tamSequenciaA - 1 - i) >= 0)
-		{
+	for(int i = 0; i < 2*tamSequencia - 1; i++){
+		if((tamSequencia - 1 - i) >= 0){
 			#pragma omp parallel for firstprivate(score, diagonal, topo, esquerda)
 			for(int j = 0; j <= i; j++){
-				
 				int flagI = i - j;
-				if(matrizValores[flagI * tamSequenciaA + j].valor == 1){
-		               score = sequenciaB[flagI - 1] == sequenciaA[j - 1] ? MATCH : MISMATCH;
-					diagonal.valor = matrizValores[(flagI - 1) * tamSequenciaA + (j - 1)].valor + score;
-					topo.valor = matrizValores[(flagI - 1) * tamSequenciaA + j].valor + GAP;
-					esquerda.valor = matrizValores[flagI * tamSequenciaA + (j - 1)].valor + GAP;
-					matrizValores[flagI * tamSequenciaA + j] = maxValor(diagonal, topo, esquerda);
-				        	#pragma omp critical
+				if(matrizValores[flagI * tamSequencia + j].valor == 1){
+		            score = sequenciaB[flagI - 1] == sequenciaA[j - 1] ? MATCH : MISMATCH;
+					diagonal.valor = matrizValores[(flagI - 1) * tamSequencia + (j - 1)].valor + score;
+					topo.valor = matrizValores[(flagI - 1) * tamSequencia + j].valor + GAP;
+					esquerda.valor = matrizValores[flagI * tamSequencia + (j - 1)].valor + GAP;
+					matrizValores[flagI * tamSequencia + j] = maxValor(diagonal, topo, esquerda);
+				    
+				    #pragma omp critical
 		        	{
-						if(matrizValores[flagI * tamSequenciaA + j].valor >= matrizValores[maxI * tamSequenciaA + maxJ].valor){
-		        				maxI = flagI;
-		       					maxJ = j;
+						if(matrizValores[flagI * tamSequencia + j].valor >= matrizValores[maxI * tamSequencia + maxJ].valor){
+		        			maxI = flagI;
+		       				maxJ = j;
 		       			}
 					} 
 				}
 			}
-			printf("\n\n\n\n");
-		
-		} else {
+		}else {
 
-			int min_i = abs(2*tamSequenciaA - i - 1 - max_i);
+			int min_i = abs(2*tamSequencia - i - 1 - max_i);
 				
 			#pragma omp parallel for firstprivate(score, diagonal, topo, esquerda)
 			for (int j = max_i; j > min_i ; j--){
-			
 				int flagI = i - j;
-				if(matrizValores[flagI * tamSequenciaA + j].valor == 1){
-					printf("THREAD:%d  -  MATRIZ[%d][%d]\n", omp_get_thread_num(), flagI, j);
-	                score = sequenciaB[flagI - 1] == sequenciaA[j - 1] ? MATCH : MISMATCH;
-					diagonal.valor = matrizValores[(flagI - 1) * tamSequenciaA + (j - 1)].valor + score;
-					topo.valor = matrizValores[(flagI - 1) * tamSequenciaA + j].valor + GAP;
-					esquerda.valor = matrizValores[flagI * tamSequenciaA + (j - 1)].valor + GAP;
-					matrizValores[flagI * tamSequenciaA + j] = maxValor(diagonal, topo, esquerda);
+				if(matrizValores[flagI * tamSequencia + j].valor == 1){
+					score = sequenciaB[flagI - 1] == sequenciaA[j - 1] ? MATCH : MISMATCH;
+					diagonal.valor = matrizValores[(flagI - 1) * tamSequencia + (j - 1)].valor + score;
+					topo.valor = matrizValores[(flagI - 1) * tamSequencia + j].valor + GAP;
+					esquerda.valor = matrizValores[flagI * tamSequencia + (j - 1)].valor + GAP;
+					matrizValores[flagI * tamSequencia + j] = maxValor(diagonal, topo, esquerda);
 	
 		        	#pragma omp critical
 		        	{
-						if(matrizValores[flagI * tamSequenciaA + j].valor >= matrizValores[maxI * tamSequenciaA + maxJ].valor){
-		        				maxI = flagI;
-		       					maxJ = j;
+						if(matrizValores[flagI * tamSequencia + j].valor >= matrizValores[maxI * tamSequencia + maxJ].valor){
+		        			maxI = flagI;
+		       				maxJ = j;
 		       			}
 					} 
 				
 				}
 			}
-			printf("\n\n\n\n");
 		}
 	}
 }
 
 
-char *insertChar(char *string, char *ch, int pos){
-	char *buffer;
-    int tam;
+void backtrace(){
+  	int i= 0;
+	char ch = '-';
 
-    buffer = malloc((strlen(string) * 2) * sizeof(char));
+	alinhamentoA = malloc((tamSequencia * 2) * sizeof(char));
+	alinhamentoB = malloc((tamSequencia * 2) * sizeof(char));
 
-	strncpy(buffer, string, pos);
-    tam = strlen(buffer);
-    strcpy(buffer + tam, ch);
-    tam++;
-    strcpy(buffer + tam, string + pos);
+  	while(matrizValores[maxI * tamSequencia + maxJ].valor != 0){
 
-    strcpy(string, buffer); 
+	    if(matrizValores[maxI * tamSequencia + maxJ].origem == DIAGONAL){
 
-    free(buffer);
+	    	alinhamentoA[i] = sequenciaA[maxJ-1];
+	    	alinhamentoB[i] = sequenciaB[maxI-1];
 
-    return string;
+	      	maxI--;
+	      	maxJ--;
+	    } else if(matrizValores[maxI * tamSequencia + maxJ].origem == TOPO){
+	   
+	      	alinhamentoA[i] = ch;
+			alinhamentoB[i] = sequenciaB[maxI-1];
+
+	      	maxI--;
+
+	   	} else if(matrizValores[maxI * tamSequencia + maxJ].origem == ESQUERDA){
+	       
+	   		alinhamentoA[i] = sequenciaA[maxJ-1];
+			alinhamentoB[i] = ch;
+		
+	      	maxJ--;
+	    }
+
+	    i++;
+	}
+
+	for (int j = 0; j < i; j++){
+  		printf("%c", alinhamentoA[j]);
+	}
+	printf("\n");
+	
+	for (int j = 0; j < i; ++j){
+  		printf("%c", alinhamentoB[j]);
+	}
+	printf("\n");
 }
 
-void backtrace(long maiorElemento){
-  //char *ch;
-
-  // ch = '-';
-
-  while(matrizValores[maxI * tamSequenciaA + maxJ].valor > 0){
-    
-    if(matrizValores[maxI * tamSequenciaA + maxJ].origem == DIAGONAL){
-
-      	maxI--;
-      	maxJ--;
-    
-    } else if(matrizValores[maxI * tamSequenciaA + maxJ].origem == TOPO){
-   
-      	sequenciaA = insertChar(sequenciaA, "-", maxJ);
-
-      	maxI--;
-
-   	} else if(matrizValores[maxI * tamSequenciaA + maxJ].origem == ESQUERDA){
-       
-   		sequenciaB = insertChar(sequenciaB, "-", maxI);
-
-      	maxJ--;
-    }
-
-  }
-
-  printf("%s\n", sequenciaA);
-  printf("%s\n", sequenciaB);
-}
 
 void imprimeMat(smithWaterman *mat){
 
     printf("MATRIZ DE VALORES:\n");
 
-  	for (int i = 0; i < tamSequenciaA; ++i){
-  		for (int j = 0; j < tamSequenciaB; ++j){
-  			printf("%ld ", mat[i * tamSequenciaA + j].valor);
+  	for (int i = 0; i < tamSequencia; ++i){
+  		for (int j = 0; j < tamSequencia; ++j){
+  			printf("%ld ", mat[i * tamSequencia + j].valor);
   		}
   		printf("\n");
   	}
@@ -220,22 +207,19 @@ void imprimeMat(smithWaterman *mat){
 
     printf("MATRIZ DE ORIGENS:\n");
 
-    for (int i = 0; i < tamSequenciaA; ++i){
-      for (int j = 0; j < tamSequenciaB; ++j){
-        printf("%ld ", mat[i * tamSequenciaA + j].origem);
-      }
+    for (int i = 0; i < tamSequencia; ++i){
+     	for (int j = 0; j < tamSequencia; ++j){
+        	printf("%ld ", mat[i * tamSequencia + j].origem);
+      	}
       printf("\n");
     }
 }
-
-
 
 
 int main(int argc, char **argv){
   
 	char *nomeArq;
 	int nIteracao;
-  	long maiorElemento;
   	double start, end;
 
 	nomeArq = argv[1];
@@ -247,7 +231,7 @@ int main(int argc, char **argv){
 
 	calcSmithWaterman();
 	
-  	imprimeMat(matrizValores);
+  	//imprimeMat(matrizValores);
 
 
  //  	start = omp_get_wtime();
@@ -259,7 +243,7 @@ int main(int argc, char **argv){
 	// printf("\n\n\n");
 
 
-	// backtrace(maiorElemento);
+	backtrace();
 
  // 	end = omp_get_wtime();
 
