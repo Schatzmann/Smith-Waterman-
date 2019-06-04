@@ -108,9 +108,9 @@ void calcSmithWaterman() {
 					esquerda.valor = matrizValores[flagI * tamSequencia + (j - 1)].valor + GAP;
 					matrizValores[flagI * tamSequencia + j] = maxValor(diagonal, topo, esquerda);
 				    
-				    #pragma omp critical
-		        	{
-						if(matrizValores[flagI * tamSequencia + j].valor >= matrizValores[maxI * tamSequencia + maxJ].valor){
+					if(matrizValores[flagI * tamSequencia + j].valor >= matrizValores[maxI * tamSequencia + maxJ].valor){
+				   		#pragma omp critical
+		        		{
 		        			maxI = flagI;
 		       				maxJ = j;
 		       			}
@@ -131,9 +131,9 @@ void calcSmithWaterman() {
 					esquerda.valor = matrizValores[flagI * tamSequencia + (j - 1)].valor + GAP;
 					matrizValores[flagI * tamSequencia + j] = maxValor(diagonal, topo, esquerda);
 	
-		        	#pragma omp critical
-		        	{
-						if(matrizValores[flagI * tamSequencia + j].valor >= matrizValores[maxI * tamSequencia + maxJ].valor){
+					if(matrizValores[flagI * tamSequencia + j].valor >= matrizValores[maxI * tamSequencia + maxJ].valor){
+		        		#pragma omp critical
+		        		{
 		        			maxI = flagI;
 		       				maxJ = j;
 		       			}

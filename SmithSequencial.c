@@ -190,7 +190,7 @@ int main(int argc, char **argv){
 		calcSmithWaterman();	
 	}
 
-  	imprimeMat(matrizValores);
+  	//imprimeMat(matrizValores);
 
 	backtrace();
 
