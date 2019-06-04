@@ -23,7 +23,7 @@ typedef struct smithWaterman {
 
 char *sequenciaA, *sequenciaB, *alinhamentoA, *alinhamentoB;
 smithWaterman *matrizValores;
-long tamSequencia, maxI, maxJ;
+long tamSequencia, maxI, maxJ, tamAlinOtimos;
 
 void alocarMatriz(){
 
@@ -147,8 +147,9 @@ void calcSmithWaterman() {
 
 
 void backtrace(){
-  	int i= 0;
 	char ch = '-';
+
+  	tamAlinOtimos = 0;
 
 	alinhamentoA = malloc((tamSequencia * 2) * sizeof(char));
 	alinhamentoB = malloc((tamSequencia * 2) * sizeof(char));
@@ -157,40 +158,41 @@ void backtrace(){
 
 	    if(matrizValores[maxI * tamSequencia + maxJ].origem == DIAGONAL){
 
-	    	alinhamentoA[i] = sequenciaA[maxJ-1];
-	    	alinhamentoB[i] = sequenciaB[maxI-1];
+	    	alinhamentoA[tamAlinOtimos] = sequenciaA[maxJ-1];
+	    	alinhamentoB[tamAlinOtimos] = sequenciaB[maxI-1];
 
 	      	maxI--;
 	      	maxJ--;
 	    } else if(matrizValores[maxI * tamSequencia + maxJ].origem == TOPO){
 	   
-	      	alinhamentoA[i] = ch;
-			alinhamentoB[i] = sequenciaB[maxI-1];
+	      	alinhamentoA[tamAlinOtimos] = ch;
+			alinhamentoB[tamAlinOtimos] = sequenciaB[maxI-1];
 
 	      	maxI--;
 
 	   	} else if(matrizValores[maxI * tamSequencia + maxJ].origem == ESQUERDA){
 	       
-	   		alinhamentoA[i] = sequenciaA[maxJ-1];
-			alinhamentoB[i] = ch;
+	   		alinhamentoA[tamAlinOtimos] = sequenciaA[maxJ-1];
+			alinhamentoB[tamAlinOtimos] = ch;
 		
 	      	maxJ--;
 	    }
 
-	    i++;
+	    tamAlinOtimos++;
 	}
+}
 
-	for (int j = 0; j < i; j++){
+void imprimeAlinhamentosOtimos(){
+	for (int j = 0; j < tamAlinOtimos; j++){
   		printf("%c", alinhamentoA[j]);
 	}
 	printf("\n");
 	
-	for (int j = 0; j < i; ++j){
+	for (int j = 0; j < tamAlinOtimos; ++j){
   		printf("%c", alinhamentoB[j]);
 	}
 	printf("\n");
 }
-
 
 void imprimeMat(smithWaterman *mat){
 
@@ -219,39 +221,29 @@ void imprimeMat(smithWaterman *mat){
 int main(int argc, char **argv){
   
 	char *nomeArq;
-	int nIteracao;
   	double start, end;
 
 	nomeArq = argv[1];
-	nIteracao = argv[2] == NULL ? 1 : atoi(argv[2]);
 	
 	lerSequencias(nomeArq);
 
 	alocarMatriz();
+ 	
+  	start = omp_get_wtime();
 
-	calcSmithWaterman();
-	
-  	//imprimeMat(matrizValores);
-
-
- //  	start = omp_get_wtime();
-
-	// for(i = 0; i < nIteracao; i++){	
-	// 	calcSmithWaterman();	
-	// }
-
-	// printf("\n\n\n");
-
+	calcSmithWaterman();	
 
 	backtrace();
 
- // 	end = omp_get_wtime();
+ 	end = omp_get_wtime();
 
- // 	printf("TEMPO: %lf\n", end - start);
+ 	printf("TEMPO: %lf\n", end - start);
 
- // 	free(sequenciaA);
- // 	free(sequenciaB);
- // 	free(matrizValores);
+  	free(sequenciaA);
+ 	free(sequenciaB);
+ 	free(alinhamentoA);
+ 	free(alinhamentoB);
+ 	free(matrizValores);
 
 	return(0); 
 }
