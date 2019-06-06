@@ -17,13 +17,13 @@
 #define ESQUERDA 1
 
 typedef struct smithWaterman {
-  long valor;
-  long origem;
+  int valor;
+  int origem;
 } smithWaterman;
 
 char *sequenciaA, *sequenciaB, *alinhamentoA, *alinhamentoB;
 smithWaterman *matrizValores;
-long tamSequencia, maxI, maxJ, tamAlinOtimos;
+int tamSequencia, maxI, maxJ, tamAlinOtimos;
 
 void alocarMatriz(){
 
@@ -57,7 +57,7 @@ void lerSequencias(char *nomeArq){
 	  exit(1);
 	}
 
-	fscanf(arq, "%ld", &tamSequencia);
+	fscanf(arq, "%d", &tamSequencia);
 
 	tamSequencia++;
 	
@@ -200,7 +200,7 @@ void imprimeMat(smithWaterman *mat){
 
   	for (int i = 0; i < tamSequencia; ++i){
   		for (int j = 0; j < tamSequencia; ++j){
-  			printf("%ld ", mat[i * tamSequencia + j].valor);
+  			printf("%d ", mat[i * tamSequencia + j].valor);
   		}
   		printf("\n");
   	}
@@ -211,7 +211,7 @@ void imprimeMat(smithWaterman *mat){
 
     for (int i = 0; i < tamSequencia; ++i){
      	for (int j = 0; j < tamSequencia; ++j){
-        	printf("%ld ", mat[i * tamSequencia + j].origem);
+        	printf("%d ", mat[i * tamSequencia + j].origem);
       	}
       printf("\n");
     }
