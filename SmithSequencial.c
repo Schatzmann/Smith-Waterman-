@@ -176,10 +176,11 @@ void imprimeMat(smithWaterman *mat){
 int main(int argc, char **argv){
   
 	char *nomeArq;
- 	int maiorElemento;
+ 	int maiorElemento, niteracoes;
   	double start, end;
 
 	nomeArq = argv[1];
+	niteracoes = atoi(argv[2]);
 	
 	lerSequencias(nomeArq);
 
@@ -187,8 +188,11 @@ int main(int argc, char **argv){
 
   	start = omp_get_wtime();
 
-	calcSmithWaterman();	
-
+  	for (int i = 0; i < niteracoes; ++i)
+  	{
+		calcSmithWaterman();	
+	}
+	
 	backtrace();
 
  	end = omp_get_wtime();
@@ -197,9 +201,9 @@ int main(int argc, char **argv){
 
  	free(sequenciaA);
  	free(sequenciaB);
- 	free(alinhamentoA);
- 	free(alinhamentoB);
  	free(matrizValores);
+	free(alinhamentoA);
+ 	free(alinhamentoB);
 
 	return(0); 
 }
