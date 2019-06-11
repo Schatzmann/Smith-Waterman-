@@ -192,12 +192,10 @@ int main(int argc, char **argv){
   	{
 		calcSmithWaterman();	
 	}
-	
-	backtrace();
 
  	end = omp_get_wtime();
-
- 	printf("TEMPO: %lf\n", end - start);
+	
+	backtrace();
 
  	free(sequenciaA);
  	free(sequenciaB);
@@ -205,5 +203,6 @@ int main(int argc, char **argv){
 	free(alinhamentoA);
  	free(alinhamentoB);
 
+ 	printf("TEMPO: %lf\n\n", end - start);
 	return(0); 
 }

@@ -222,7 +222,9 @@ int main(int argc, char **argv){
   
 	char *nomeArq;
 	int niteracoes;
-  	double start, end;
+ 	double startParalelo, endParalelo, startSequencial, endSequencial, tempoSequencialParcial;
+
+  	startSequencial = omp_get_wtime();
 
 	nomeArq = argv[1];
 	niteracoes = atoi(argv[2]);
@@ -230,24 +232,35 @@ int main(int argc, char **argv){
 	lerSequencias(nomeArq);
 
 	alocarMatriz();
- 	
-  	start = omp_get_wtime();
+
+	endSequencial = omp_get_wtime();
+
+	tempoSequencialParcial = endSequencial - startSequencial;
+
+  	startParalelo = omp_get_wtime();
 
 	for (int i = 0; i < niteracoes; ++i){
 		calcSmithWaterman();	
 	}
 	
+ 	endParalelo = omp_get_wtime();
+
+ 	startSequencial = omp_get_wtime();
+
 	backtrace();
-
- 	end = omp_get_wtime();
-
- 	printf("TEMPO: %lf\n", end - start);
 
   	free(sequenciaA);
  	free(sequenciaB);
  	free(matrizValores);
 	free(alinhamentoA);
  	free(alinhamentoB);
+ 	
+ 	endSequencial = omp_get_wtime();
+
+ 	tempoSequencialParcial += endSequencial - startSequencial;
+
+ 	printf("TEMPO SEQUENCIAL: %lf\n", tempoSequencialParcial);
+ 	printf("TEMPO PARALELO: %lf\n\n", endParalelo - startParalelo);
 
 	return(0); 
 }
